@@ -170,8 +170,11 @@ export default function DashboardPage() {
 
         .item-chip {
           background: var(--cream); border: 1px solid var(--border);
-          border-radius: 20px; padding: 3px 11px; font-size: 12px; color: var(--text-dark);
+          border-radius: 10px; padding: 5px 11px; font-size: 12px; color: var(--text-dark);
         }
+
+        .item-chip-name { font-weight: 500; }
+        .item-chip-pack { font-size: 10px; color: var(--text-light); margin-top: 2px; }
 
         .order-footer {
           display: flex; align-items: center; justify-content: space-between;
@@ -266,7 +269,10 @@ export default function DashboardPage() {
                     </div>
                     <div className="order-items">
                       {order.items.map((item, i) => (
-                        <span key={i} className="item-chip">{item.name} × {item.quantity}</span>
+                        <div key={i} className="item-chip">
+                          <div className="item-chip-name">{item.name} × {item.quantity}</div>
+                          {item.packaging_note && <div className="item-chip-pack">{item.packaging_note}</div>}
+                        </div>
                       ))}
                     </div>
                     {order.notes && <div className="notes">Note: {order.notes}</div>}

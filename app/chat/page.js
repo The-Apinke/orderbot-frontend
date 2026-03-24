@@ -15,10 +15,63 @@ export default function ChatPage() {
   const [checkoutStep, setCheckoutStep] = useState(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const router = useRouter();
 
-  const API = 'https://orderbot-backend-production-d13d.up.railway.app';
+  async function startVoice() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      alert('Microphone access denied. Please allow microphone access and try again.');
+    }
+  }
+
+  async function confirmVoice() {
+    const mediaRecorder = mediaRecorderRef.current;
+    if (!mediaRecorder) return;
+    mediaRecorder.onstop = async () => {
+      setIsRecording(false);
+      setIsTranscribing(true);
+      try {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blob, 'audio.webm');
+        const res = await fetch(`${API}/chat/transcribe`, { method: 'POST', body: formData });
+        const data = await res.json();
+        setInput(data.transcript || '');
+      } catch {
+        alert('Transcription failed. Please try again.');
+      } finally {
+        setIsTranscribing(false);
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+    };
+    mediaRecorder.stop();
+  }
+
+  function cancelVoice() {
+    const mediaRecorder = mediaRecorderRef.current;
+    if (mediaRecorder) {
+      mediaRecorder.onstop = () => mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      mediaRecorder.stop();
+    }
+    setIsRecording(false);
+  }
+
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
   useEffect(() => { fetchMenu(); fetchWelcome(); }, []);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -337,7 +390,7 @@ export default function ChatPage() {
         .chat-input {
           flex: 1; background: transparent; border: none; outline: none;
           color: var(--text); font-family: 'DM Sans', sans-serif;
-          font-size: 14px; resize: none; max-height: 100px; line-height: 1.5; padding: 2px 0;
+          font-size: 14px; resize: none; max-height: 200px; line-height: 1.6; padding: 2px 0;
         }
 
         .chat-input::placeholder { color: var(--text-soft); }
@@ -352,6 +405,68 @@ export default function ChatPage() {
 
         .send-btn:hover { background: var(--brown-hover); transform: scale(1.06); }
         .send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .mic-btn {
+          width: 36px; height: 36px; border-radius: 50%;
+          background: transparent; border: 1.5px solid var(--border);
+          color: var(--text-mid); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: all 0.2s; flex-shrink: 0;
+        }
+        .mic-btn:hover { background: var(--cream-dark); border-color: var(--brown); color: var(--brown); }
+
+        .recording-row {
+          display: flex; align-items: center; gap: 10px;
+          background: #fff5f5;
+          border: 1.5px solid #c0392b;
+          border-radius: 26px;
+          padding: 10px 14px;
+        }
+
+        .waveform {
+          display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+        }
+
+        .wave-bar {
+          width: 3px; border-radius: 3px; background: #c0392b;
+          animation: wave 1s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(1) { height: 8px;  animation-delay: 0s; }
+        .wave-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { height: 22px; animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { height: 8px;  animation-delay: 0.4s; }
+
+        @keyframes wave {
+          0%,100% { transform: scaleY(1); opacity: 0.6; }
+          50% { transform: scaleY(1.8); opacity: 1; }
+        }
+
+        .live-transcript {
+          flex: 1; font-size: 14px; color: #c0392b;
+          font-style: italic; line-height: 1.4;
+          min-height: 20px;
+        }
+
+        .live-transcript.empty { color: #e08080; }
+
+        .confirm-btn {
+          width: 36px; height: 36px; border-radius: 50%;
+          background: #27ae60; border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(39,174,96,0.3);
+        }
+        .confirm-btn:hover { background: #219a52; transform: scale(1.06); }
+
+        .cancel-voice-btn {
+          width: 36px; height: 36px; border-radius: 50%;
+          background: transparent; border: 1.5px solid #c0392b;
+          color: #c0392b; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; transition: all 0.2s; font-size: 18px; line-height: 1;
+        }
+        .cancel-voice-btn:hover { background: #c0392b; color: #fff; }
 
         /* ── CART DRAWER ── */
         .overlay { position: fixed; inset: 0; background: rgba(42,26,8,0.35); z-index: 40; backdrop-filter: blur(4px); }
@@ -467,11 +582,55 @@ export default function ChatPage() {
         }
 
         .modal-btn:hover { background: var(--brown-hover); transform: translateY(-1px); }
+
+        /* ── MOBILE MENU BUTTON ── */
+        .mobile-menu-btn {
+          display: none;
+          align-items: center; gap: 6px;
+          background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+          border-radius: 20px; padding: 5px 12px;
+          color: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px;
+          cursor: pointer; transition: background 0.2s;
+        }
+        .mobile-menu-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* ── MOBILE MENU OVERLAY ── */
+        .menu-overlay {
+          display: none;
+          position: fixed; inset: 0; background: rgba(42,26,8,0.5);
+          z-index: 45; backdrop-filter: blur(4px);
+        }
+
+        .menu-panel.mobile-open {
+          position: fixed; top: 0; left: 0; bottom: 0;
+          z-index: 50; box-shadow: 8px 0 32px rgba(42,26,8,0.2);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+          .menu-panel { display: none; }
+          .menu-panel.mobile-open { display: flex; width: 280px; }
+          .menu-overlay { display: block; }
+          .mobile-menu-btn { display: flex; }
+          .message { max-width: 85%; }
+          .messages { padding: 16px; gap: 12px; }
+          .chat-header { padding: 12px 16px; }
+          .input-area { padding: 10px 16px; }
+          .input-row { padding: 8px 8px 8px 14px; }
+          .cart-btn { padding: 7px 12px; font-size: 12px; }
+          .cart-drawer { width: 100%; }
+          .modal { width: calc(100vw - 32px); padding: 28px 22px; }
+        }
       `}</style>
 
       <div className="layout">
+        {/* ── MOBILE MENU OVERLAY ── */}
+        {mobileMenuOpen && (
+          <div className="menu-overlay" onClick={() => setMobileMenuOpen(false)} />
+        )}
+
         {/* ── LEFT: MENU ── */}
-        <div className="menu-panel">
+        <div className={`menu-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           <div className="menu-header">
             <div className="gold-line" />
             <div className="restaurant-name">Uncle Soji's Suya Spot</div>
@@ -500,6 +659,9 @@ export default function ChatPage() {
         <div className="chat-panel">
           <div className="chat-header">
             <div className="header-left">
+              <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
+                ☰ Menu
+              </button>
               <div className="online-pill">
                 <div className="online-dot" />
                 <span className="online-text">Online</span>
@@ -536,21 +698,56 @@ export default function ChatPage() {
           </div>
 
           <div className="input-area">
-            <div className="input-row">
-              <textarea
-                className="chat-input"
-                placeholder="Type your order or ask a question…"
-                value={input}
-                rows={1}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-              />
-              <button className="send-btn" onClick={() => sendMessage(input)} disabled={loading || !input.trim()}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </button>
-            </div>
+            {isTranscribing ? (
+              <div className="recording-row">
+                <div className="waveform">
+                  <div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/>
+                  <div className="wave-bar"/><div className="wave-bar"/>
+                </div>
+                <div className="live-transcript empty">Transcribing your order…</div>
+              </div>
+            ) : isRecording ? (
+              <div className="recording-row">
+                <div className="waveform">
+                  <div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/>
+                  <div className="wave-bar"/><div className="wave-bar"/>
+                </div>
+                <div className="live-transcript empty">Listening — speak your order…</div>
+                <button className="cancel-voice-btn" onClick={cancelVoice} title="Cancel">×</button>
+                <button className="confirm-btn" onClick={confirmVoice} title="Done, transcribe">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="input-row">
+                <textarea
+                  className="chat-input"
+                  placeholder="Type your order or ask a question…"
+                  value={input}
+                  rows={3}
+                  suppressHydrationWarning
+                  onChange={e => {
+                    setInput(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
+                />
+                <button className="mic-btn" onClick={startVoice} title="Speak your order">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3"/>
+                    <path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
+                  </svg>
+                </button>
+                <button className="send-btn" onClick={() => sendMessage(input)} disabled={loading || !input.trim()}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
