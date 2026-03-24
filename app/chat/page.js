@@ -688,7 +688,7 @@ export default function ChatPage() {
                 ) : (
                   <div className="bubble">
                     {msg.role === 'assistant'
-                      ? <ReactMarkdown>{msg.content.replace(/\[ORDER_CONFIRMED\][\s\S]*?\[\/ORDER_CONFIRMED\]/, '')}</ReactMarkdown>
+                      ? <ReactMarkdown>{msg.content.split('[ORDER_CONFIRMED]')[0].trim()}</ReactMarkdown>
                       : msg.content}
                   </div>
                 )}
