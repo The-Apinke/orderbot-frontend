@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
-  const name = searchParams.get('name') || 'Customer';
+  const name  = searchParams.get('name')  || 'Customer';
   const phone = searchParams.get('phone') || '';
   const total = searchParams.get('total') || '0';
 
@@ -24,6 +24,7 @@ function ConfirmationContent() {
           --gold:        #d6b24a;
           --gold-pale:   #f9f0d4;
           --cream:       #f2f0e9;
+          --cream-dark:  #e8e4d8;
           --green:       #829460;
           --green-hover: #6b7b4e;
           --white:       #ffffff;
@@ -51,14 +52,12 @@ function ConfirmationContent() {
 
         @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Top section: brown with gold checkmark */
         .card-top {
           background: var(--brown);
           padding: 32px 28px 26px; text-align: center;
           position: relative;
         }
 
-        /* Green bottom border on top section */
         .card-top::after {
           content: ''; display: block;
           height: 4px; background: linear-gradient(90deg, var(--brown), var(--gold) 50%, var(--green));
@@ -81,7 +80,6 @@ function ConfirmationContent() {
 
         .card-body { padding: 24px 26px; display: flex; flex-direction: column; gap: 12px; }
 
-        /* Summary card */
         .info-block {
           background: var(--cream); border: 1px solid var(--border-soft);
           border-radius: 14px; overflow: hidden;
@@ -123,30 +121,26 @@ function ConfirmationContent() {
         .total-key { font-size: 13px; color: var(--text); font-weight: 600; }
         .total-val { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 22px; font-weight: 700; }
 
-        /* Bank details */
         .acct-number {
           font-family: 'Playfair Display', serif;
           color: var(--gold); font-size: 20px; letter-spacing: 0.08em; font-weight: 700;
         }
 
-        /* WhatsApp button */
         .whatsapp-btn {
           display: flex; align-items: center; justify-content: center; gap: 8px;
           background: #f1faf1; border: 1px solid #b8ddb8; border-radius: 10px;
           color: #2e7d32; text-decoration: none;
           padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-          transition: all 0.2s; margin: 0 16px 14px;
+          transition: all 0.2s;
         }
 
         .whatsapp-btn:hover { background: #e3f5e3; border-color: #4caf50; }
 
-        /* Notice */
         .notice {
           font-size: 12px; color: var(--text-soft); text-align: center;
           line-height: 1.65; padding: 0 4px;
         }
 
-        /* CTA */
         .new-order-btn {
           display: block; width: 100%; padding: 14px;
           background: var(--green); color: #fff; border: none; border-radius: 12px;
@@ -161,7 +155,6 @@ function ConfirmationContent() {
 
       <div className="page">
         <div className="card">
-          {/* TOP */}
           <div className="card-top">
             <div className="check-circle">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#623920" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -173,7 +166,6 @@ function ConfirmationContent() {
           </div>
 
           <div className="card-body">
-            {/* Order summary */}
             <div className="info-block">
               <div className="block-header">
                 <div className="block-dot brown" />
@@ -195,7 +187,6 @@ function ConfirmationContent() {
               </div>
             </div>
 
-            {/* Payment details */}
             <div className="info-block">
               <div className="block-header">
                 <div className="block-dot green" />
@@ -217,7 +208,6 @@ function ConfirmationContent() {
               </div>
             </div>
 
-            {/* WhatsApp */}
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#4caf50">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>

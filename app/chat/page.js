@@ -4,6 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useRouter } from 'next/navigation';
 
+const QUICK_PROMPTS = [
+  { label: "What's on the menu?",    send: "What's on the menu?",                                          sub: 'See everything we serve',       accent: '#829460' },
+  { label: "Order Beef Suya",         send: "I'd like to order Beef Suya",                                  sub: 'Our most popular cut',          accent: '#623920' },
+  { label: "What's the best seller?", send: "What's your best seller?",                                     sub: 'Let Soji recommend',            accent: '#d6b24a' },
+  { label: "Order for a group",       send: "I want to place an order for a group of people, help me out",  sub: 'Feeding more than one person',  accent: '#4e7a60' },
+]
+
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -187,7 +194,7 @@ export default function ChatPage() {
 
         body { background: var(--cream); font-family: 'DM Sans', sans-serif; color: var(--text); }
 
-        .layout { display: flex; height: 100vh; overflow: hidden; }
+        .layout { display: flex; height: 100vh; overflow: hidden; background: radial-gradient(ellipse 120% 80% at 60% 0%, #ede8dc 0%, var(--cream) 70%); }
 
         /* ── LEFT PANEL ── */
         .menu-panel {
@@ -256,20 +263,33 @@ export default function ChatPage() {
         .add-btn:hover { background: var(--brown); color: #fff; border-color: var(--brown); }
 
         /* ── RIGHT PANEL ── */
-        .chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
+        .chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cream); min-width: 0; }
+        .messages-wrap { flex: 1; overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
-        /* ↓ CHANGED: green background, brown bottom border */
         .chat-header {
-          background: var(--green);
+          background: linear-gradient(135deg, #8fa668 0%, #829460 55%, #6b7b4e 100%);
           border-bottom: 3px solid var(--brown);
           padding: 14px 24px;
           display: flex; align-items: center; justify-content: space-between;
           flex-shrink: 0;
+          box-shadow: 0 6px 24px rgba(98,57,32,0.22), inset 0 1px 0 rgba(255,255,255,0.18);
         }
 
         .header-left { display: flex; align-items: center; gap: 10px; }
 
-        /* ↓ CHANGED: white pill on green bg */
+        .circle-emblem {
+          width: 34px; height: 34px; border-radius: 50%;
+          background: rgba(0,0,0,0.2);
+          border: 1.5px solid rgba(255,255,255,0.35);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .emblem-text {
+          font-family: 'Playfair Display', serif;
+          font-size: 11px; font-weight: 700; color: #fff;
+        }
+
         .online-pill {
           display: flex; align-items: center; gap: 5px;
           background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
@@ -283,30 +303,28 @@ export default function ChatPage() {
 
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-        /* ↓ CHANGED: white text on green bg */
         .online-text { font-size: 10px; color: #fff; font-weight: 500; letter-spacing: 0.04em; }
 
         .header-titles { margin-left: 4px; }
 
-        /* ↓ CHANGED: white title on green bg */
         .chat-title {
           font-family: 'Playfair Display', serif;
           font-size: 15px; font-weight: 600; color: #fff;
         }
 
-        /* ↓ CHANGED: semi-transparent white subtitle */
         .chat-subtitle { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 1px; }
 
-        /* Cart button: brown pill — pops on green */
         .cart-btn {
           display: flex; align-items: center; gap: 7px;
-          background: var(--brown); color: #fff;
+          background: linear-gradient(135deg, #6e4028 0%, #623920 100%);
+          color: #fff;
           border: none; border-radius: 20px; padding: 8px 18px;
           font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-          cursor: pointer; transition: background 0.2s;
+          cursor: pointer; transition: all 0.2s;
+          box-shadow: 3px 3px 10px rgba(98,57,32,0.35), -1px -1px 3px rgba(255,255,255,0.1);
         }
 
-        .cart-btn:hover { background: var(--brown-hover); }
+        .cart-btn:hover { background: linear-gradient(135deg, #7a4830, #4e2d18); transform: translateY(-1px); box-shadow: 4px 5px 14px rgba(98,57,32,0.4); }
 
         .cart-badge {
           background: var(--gold); color: var(--brown);
@@ -315,49 +333,96 @@ export default function ChatPage() {
         }
 
         /* ── MESSAGES ── */
-        .messages {
-          flex: 1; overflow-y: auto; padding: 28px 32px;
-          display: flex; flex-direction: column; gap: 16px;
+        .messages-wrap {
+          flex: 1; overflow-y: auto; position: relative;
           scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
 
-        .message { max-width: 64%; animation: fadeUp 0.3s ease; }
-
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-        .message.user { align-self: flex-end; }
-        .message.assistant { align-self: flex-start; }
-
-        .bubble { padding: 13px 17px; border-radius: 18px; font-size: 14px; line-height: 1.7; }
-
-        .message.user .bubble {
-          background: var(--brown);
-          color: #fff;
-          border-bottom-right-radius: 4px;
-          box-shadow: 0 2px 10px rgba(98,57,32,0.2);
+        /* Top fade — cream fades in over messages as you scroll */
+        .messages-fade {
+          position: sticky; top: 0; left: 0; right: 0; height: 56px; z-index: 2;
+          background: linear-gradient(to bottom, var(--cream) 0%, transparent 100%);
+          pointer-events: none; margin-bottom: -56px;
         }
 
-        /* ↓ CHANGED: pale green tint instead of white */
+        .messages {
+          padding: 12px 32px 28px;
+          display: flex; flex-direction: column;
+          min-height: 100%;
+        }
+
+        /* Each row: avatar + bubble side by side */
+        .msg-row {
+          display: flex; align-items: flex-end; gap: 8px;
+          animation: msgPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes msgPop {
+          from { opacity: 0; transform: scale(0.88) translateY(6px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .msg-row.user { flex-direction: row-reverse; }
+
+        /* Spacing between message groups */
+        .msg-group { display: flex; flex-direction: column; }
+        .msg-group.user { align-items: flex-end; }
+        .msg-group.assistant { align-items: flex-start; }
+        .msg-group + .msg-group { margin-top: 20px; }
+        .msg-row + .msg-row { margin-top: 4px; }
+
+        /* Soji avatar */
+        .soji-avatar {
+          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+          background: linear-gradient(135deg, #6e4028 0%, #623920 100%);
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 3px 3px 8px rgba(98,57,32,0.3), -1px -1px 3px rgba(255,255,255,0.2);
+        }
+        .avatar-spacer { width: 30px; flex-shrink: 0; }
+
+        .msg-name {
+          font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+          font-weight: 600; margin-bottom: 4px; padding-left: 2px;
+        }
+        .msg-group.user .msg-name { text-align: right; color: var(--text-soft); padding-left: 0; padding-right: 2px; }
+        .msg-group.assistant .msg-name { color: var(--green); }
+
+        .message { max-width: min(340px, 62vw); }
+        .bubble { padding: 11px 15px; font-size: 14px; line-height: 1.7; border-radius: 18px; }
+
+        /* First bubble in group: flat on avatar side */
+        .msg-group.assistant .msg-row:first-child .bubble { border-bottom-left-radius: 4px; }
+        .msg-group.user .msg-row:first-child .bubble      { border-bottom-right-radius: 4px; }
+
+        /* Middle bubbles: flat on both avatar-side corners */
+        .msg-group.assistant .msg-row:not(:first-child):not(:last-child) .bubble {
+          border-top-left-radius: 4px; border-bottom-left-radius: 4px;
+        }
+        .msg-group.user .msg-row:not(:first-child):not(:last-child) .bubble {
+          border-top-right-radius: 4px; border-bottom-right-radius: 4px;
+        }
+
+        /* Last bubble in multi-message group: flat top on avatar side */
+        .msg-group.assistant .msg-row:last-child:not(:first-child) .bubble { border-top-left-radius: 4px; }
+        .msg-group.user .msg-row:last-child:not(:first-child) .bubble      { border-top-right-radius: 4px; }
+
+        .message.user .bubble {
+          background: linear-gradient(135deg, #6e4028 0%, #623920 100%);
+          color: #fff;
+          box-shadow: 5px 5px 16px rgba(98,57,32,0.35), -1px -1px 4px rgba(255,255,255,0.08);
+        }
+
         .message.assistant .bubble {
-          background: #e8eddf;
+          background: linear-gradient(145deg, #eef3e6 0%, #e8eddf 100%);
           color: var(--text);
           border: 1px solid #c8d4b4;
-          border-bottom-left-radius: 4px;
-          box-shadow: 0 2px 8px rgba(98,57,32,0.06);
+          box-shadow: 4px 4px 14px rgba(98,57,32,0.1), -2px -2px 8px rgba(255,255,255,0.85);
         }
 
         .message.assistant .bubble p { margin-bottom: 8px; }
         .message.assistant .bubble p:last-child { margin-bottom: 0; }
         .message.assistant .bubble ul, .message.assistant .bubble ol { padding-left: 18px; }
         .message.assistant .bubble li { margin-bottom: 4px; }
-
-        .msg-label {
-          font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
-          margin-bottom: 5px; font-weight: 500;
-        }
-
-        .message.user .msg-label { text-align: right; color: var(--text-soft); }
-        .message.assistant .msg-label { color: var(--green); }
 
         .typing { display: flex; gap: 5px; align-items: center; padding: 2px 0; }
         .dot { width: 7px; height: 7px; background: var(--gold); border-radius: 50%; animation: bounce 1.3s infinite; opacity: 0.5; }
@@ -376,15 +441,15 @@ export default function ChatPage() {
         .input-row {
           display: flex; align-items: flex-end; gap: 10px;
           background: var(--cream);
-          border: 1.5px solid var(--border);
+          border: 1px solid var(--border);
           border-radius: 26px;
           padding: 10px 10px 10px 20px;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: box-shadow 0.2s;
+          box-shadow: inset 3px 3px 8px rgba(98,57,32,0.1), inset -2px -2px 6px rgba(255,255,255,0.9);
         }
 
         .input-row:focus-within {
-          border-color: var(--brown);
-          box-shadow: 0 0 0 3px rgba(98,57,32,0.08);
+          box-shadow: inset 3px 3px 8px rgba(98,57,32,0.12), inset -2px -2px 6px rgba(255,255,255,0.9), 0 0 0 2px rgba(98,57,32,0.1);
         }
 
         .chat-input {
@@ -397,13 +462,15 @@ export default function ChatPage() {
 
         .send-btn {
           width: 36px; height: 36px; border-radius: 50%;
-          background: var(--brown); border: none; cursor: pointer;
+          background: linear-gradient(135deg, #6e4028 0%, #623920 100%);
+          border: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
           transition: all 0.2s; flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(98,57,32,0.3);
+          box-shadow: 4px 4px 10px rgba(98,57,32,0.4), -1px -1px 4px rgba(255,255,255,0.15);
         }
 
-        .send-btn:hover { background: var(--brown-hover); transform: scale(1.06); }
+        .send-btn:hover { background: linear-gradient(135deg, #7a4830, #4e2d18); transform: scale(1.07) translateY(-1px); box-shadow: 6px 6px 14px rgba(98,57,32,0.45); }
+        .send-btn:active { transform: scale(0.96); box-shadow: 2px 2px 6px rgba(98,57,32,0.3); }
         .send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .mic-btn {
@@ -423,9 +490,7 @@ export default function ChatPage() {
           padding: 10px 14px;
         }
 
-        .waveform {
-          display: flex; align-items: center; gap: 3px; flex-shrink: 0;
-        }
+        .waveform { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
 
         .wave-bar {
           width: 3px; border-radius: 3px; background: #c0392b;
@@ -444,10 +509,8 @@ export default function ChatPage() {
 
         .live-transcript {
           flex: 1; font-size: 14px; color: #c0392b;
-          font-style: italic; line-height: 1.4;
-          min-height: 20px;
+          font-style: italic; line-height: 1.4; min-height: 20px;
         }
-
         .live-transcript.empty { color: #e08080; }
 
         .confirm-btn {
@@ -476,15 +539,17 @@ export default function ChatPage() {
           background: var(--white); border-left: 1px solid var(--border);
           z-index: 50; display: flex; flex-direction: column;
           animation: slideIn 0.22s ease;
-          box-shadow: -16px 0 48px rgba(98,57,32,0.1);
+          box-shadow: -12px 0 40px rgba(98,57,32,0.18), -2px 0 8px rgba(98,57,32,0.08);
         }
 
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
         .drawer-header {
-          background: var(--brown); padding: 20px 22px;
+          background: linear-gradient(135deg, #6e4028 0%, #623920 55%, #4e2d18 100%);
+          padding: 20px 22px;
           display: flex; justify-content: space-between; align-items: center;
           flex-shrink: 0;
+          box-shadow: 0 4px 16px rgba(98,57,32,0.2), inset 0 1px 0 rgba(255,255,255,0.12);
         }
 
         .drawer-title { font-family: 'Playfair Display', serif; font-size: 18px; color: #fff; }
@@ -516,18 +581,20 @@ export default function ChatPage() {
 
         .checkout-btn {
           width: 100%; padding: 13px;
-          background: var(--green); color: #fff; border: none; border-radius: 12px;
+          background: linear-gradient(135deg, #8fa668 0%, #829460 60%, #6b7b4e 100%);
+          color: #fff; border: none; border-radius: 12px;
           font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
           cursor: pointer; transition: all 0.2s;
-          box-shadow: 0 3px 12px rgba(130,148,96,0.3);
+          box-shadow: 4px 4px 14px rgba(107,123,78,0.45), -1px -1px 4px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
           letter-spacing: 0.02em;
         }
 
-        .checkout-btn:hover { background: var(--green-hover); transform: translateY(-1px); }
+        .checkout-btn:hover { background: linear-gradient(135deg, #8fa668, #6b7b4e); transform: translateY(-2px); box-shadow: 5px 7px 20px rgba(107,123,78,0.5); }
 
-        .empty-cart { text-align: center; padding: 48px 0; }
-        .empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
-        .empty-text { color: var(--text-soft); font-size: 13px; }
+        .empty-cart { text-align: center; padding: 40px 16px; }
+        .empty-illustration { width: 110px; height: 110px; margin: 0 auto 18px; display: block; }
+        .empty-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+        .empty-text { color: var(--text-soft); font-size: 13px; line-height: 1.6; }
 
         /* ── MODAL ── */
         .modal-overlay {
@@ -541,8 +608,7 @@ export default function ChatPage() {
           animation: fadeUp 0.28s ease;
           box-shadow: 0 28px 70px rgba(98,57,32,0.18);
           border: 1px solid var(--border);
-          overflow: hidden;
-          position: relative;
+          overflow: hidden; position: relative;
         }
 
         .modal::before {
@@ -554,8 +620,7 @@ export default function ChatPage() {
         .modal-icon {
           width: 48px; height: 48px; background: var(--cream); border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
-          font-size: 22px; margin-bottom: 18px;
-          border: 1px solid var(--border-soft);
+          font-size: 22px; margin-bottom: 18px; border: 1px solid var(--border-soft);
         }
 
         .modal-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
@@ -606,20 +671,65 @@ export default function ChatPage() {
           z-index: 50; box-shadow: 8px 0 32px rgba(42,26,8,0.2);
         }
 
+        /* ── QUICK PROMPTS ── */
+        .prompts-section {
+          margin-top: 8px;
+          align-self: stretch;
+        }
+
+        .prompts-label {
+          font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--text-soft); font-weight: 500; margin-bottom: 12px;
+        }
+
+        .prompts-grid {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+
+        .prompt-card {
+          background: linear-gradient(145deg, color-mix(in srgb, var(--accent, var(--green)) 85%, white), var(--accent, var(--green)));
+          border: none; border-radius: 16px;
+          padding: 16px 14px 14px;
+          cursor: pointer; text-align: left;
+          display: flex; flex-direction: column; gap: 4px;
+          position: relative; overflow: hidden;
+          transition: transform 0.18s, box-shadow 0.18s;
+          box-shadow: 5px 5px 16px rgba(0,0,0,0.2), -2px -2px 6px rgba(255,255,255,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .prompt-card:hover { transform: translateY(-3px) scale(1.01); box-shadow: 8px 10px 24px rgba(0,0,0,0.25), -2px -2px 6px rgba(255,255,255,0.2); }
+
+        .prompt-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 13px; font-weight: 600; color: #fff; line-height: 1.3;
+        }
+
+        .prompt-sub {
+          font-size: 10px; color: rgba(255,255,255,0.65); line-height: 1.4;
+        }
+
+        .prompt-arrow {
+          position: absolute; bottom: 12px; right: 14px;
+          font-size: 16px; color: rgba(255,255,255,0.5);
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
           .menu-panel { display: none; }
           .menu-panel.mobile-open { display: flex; width: 280px; }
           .menu-overlay { display: block; }
           .mobile-menu-btn { display: flex; }
-          .message { max-width: 85%; }
-          .messages { padding: 16px; gap: 12px; }
+          .bubble { max-width: 75vw; }
+          .messages { padding: 12px 16px 20px; }
           .chat-header { padding: 12px 16px; }
           .input-area { padding: 10px 16px; }
           .input-row { padding: 8px 8px 8px 14px; }
           .cart-btn { padding: 7px 12px; font-size: 12px; }
           .cart-drawer { width: 100%; }
           .modal { width: calc(100vw - 32px); padding: 28px 22px; }
+          .prompts-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+          .prompt-card { padding: 13px 12px 12px; }
+          .prompt-title { font-size: 12px; }
         }
       `}</style>
 
@@ -662,6 +772,9 @@ export default function ChatPage() {
               <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
                 ☰ Menu
               </button>
+              <div className="circle-emblem">
+                <span className="emblem-text">US</span>
+              </div>
               <div className="online-pill">
                 <div className="online-dot" />
                 <span className="online-text">Online</span>
@@ -677,24 +790,90 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <div className="messages">
-            {messages.map((msg, i) => (
-              <div key={i} className={`message ${msg.role}`}>
-                <div className="msg-label">{msg.role === 'user' ? 'You' : 'Soji'}</div>
-                {msg.role === 'assistant' && loading && i === messages.length - 1 && msg.content === '' ? (
-                  <div className="bubble">
-                    <div className="typing"><div className="dot"/><div className="dot"/><div className="dot"/></div>
+          <div className="messages-wrap">
+            <div className="messages-fade" />
+            <div className="messages">
+
+              {/* Group consecutive same-sender messages together */}
+              {(() => {
+                const groups = [];
+                messages.forEach((msg, i) => {
+                  const prev = messages[i - 1];
+                  if (prev && prev.role === msg.role) {
+                    groups[groups.length - 1].push(msg);
+                  } else {
+                    groups.push([msg]);
+                  }
+                });
+
+                return groups.map((group, gi) => (
+                  <div key={gi} className={`msg-group ${group[0].role}`}>
+                    <div className={`msg-name`}>
+                      {group[0].role === 'user' ? 'You' : 'Soji'}
+                    </div>
+
+                    {group.map((msg, ri) => {
+                      const isLast = ri === group.length - 1;
+                      const isLastMsg = gi === groups.length - 1 && isLast;
+                      const isTyping = msg.role === 'assistant' && loading && isLastMsg && msg.content === '';
+
+                      return (
+                        <div key={ri} className={`msg-row ${msg.role}`}>
+
+                          {/* Soji avatar — only on last bubble of assistant group */}
+                          {msg.role === 'assistant' && (
+                            isLast ? (
+                              <div className="soji-avatar">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                  <path d="M12 2C9 2 7 5 8 8C5 8 3 11 5 14C3 16 4 19 7 19H17C20 19 21 16 19 14C21 11 19 8 16 8C17 5 15 2 12 2Z"
+                                    fill="#d6b24a" stroke="#c9a84c" strokeWidth="0.5"/>
+                                  <path d="M12 8 L12 19" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round"/>
+                                  <path d="M9 12 L15 12" stroke="#8B4513" strokeWidth="1" strokeLinecap="round"/>
+                                </svg>
+                              </div>
+                            ) : (
+                              <div className="avatar-spacer" />
+                            )
+                          )}
+
+                          <div className={`message ${msg.role}`}>
+                            <div className="bubble">
+                              {isTyping ? (
+                                <div className="typing">
+                                  <div className="dot"/><div className="dot"/><div className="dot"/>
+                                </div>
+                              ) : msg.role === 'assistant' ? (
+                                <ReactMarkdown>{msg.content.split('[ORDER_CONFIRMED]')[0].trim()}</ReactMarkdown>
+                              ) : msg.content}
+                            </div>
+                          </div>
+
+                        </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <div className="bubble">
-                    {msg.role === 'assistant'
-                      ? <ReactMarkdown>{msg.content.split('[ORDER_CONFIRMED]')[0].trim()}</ReactMarkdown>
-                      : msg.content}
+                ));
+              })()}
+
+              {/* Quick-start prompt cards */}
+              {messages.length <= 1 && !loading && (
+                <div className="prompts-section">
+                  <div className="prompts-label">Popular orders</div>
+                  <div className="prompts-grid">
+                    {QUICK_PROMPTS.map((p, i) => (
+                      <button key={i} className="prompt-card" onClick={() => sendMessage(p.send)}
+                        style={{ '--accent': p.accent }}>
+                        <span className="prompt-title">{p.label}</span>
+                        <span className="prompt-sub">{p.sub}</span>
+                        <span className="prompt-arrow">→</span>
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
           </div>
 
           <div className="input-area">
@@ -764,8 +943,22 @@ export default function ChatPage() {
             <div className="cart-items">
               {cart.length === 0 ? (
                 <div className="empty-cart">
-                  <span className="empty-icon">🔥</span>
-                  <div className="empty-text">Nothing added yet</div>
+                  <svg className="empty-illustration" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="55" cy="55" r="48" fill="#f9f5ef" stroke="#ece8de" strokeWidth="1.5"/>
+                    {/* Bag body */}
+                    <rect x="28" y="46" width="54" height="38" rx="8" fill="#e8e4d8" stroke="#ddd5c0" strokeWidth="1.5"/>
+                    {/* Bag handle */}
+                    <path d="M42 46 C42 36 68 36 68 46" stroke="#a08860" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                    {/* Plus badge */}
+                    <circle cx="76" cy="42" r="10" fill="#829460"/>
+                    <path d="M76 37 L76 47 M71 42 L81 42" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                    {/* Decorative dots */}
+                    <circle cx="30" cy="32" r="3" fill="#d6b24a" opacity="0.5"/>
+                    <circle cx="82" cy="28" r="2" fill="#d6b24a" opacity="0.4"/>
+                    <circle cx="25" cy="72" r="2" fill="#c9622a" opacity="0.3"/>
+                  </svg>
+                  <div className="empty-title">Your basket is empty</div>
+                  <div className="empty-text">Add items from the menu or<br/>ask Soji to help you order</div>
                 </div>
               ) : cart.map(item => (
                 <div key={item.name} className="cart-item">
