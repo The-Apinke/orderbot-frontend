@@ -4,41 +4,48 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useRouter } from 'next/navigation';
 
-const QUICK_PROMPTS = [
-  "What's on the menu?",
-  "I'd like to order Beef Suya",
-  "What's your best seller?",
-  "I want to order for a group",
-]
+// THEMES.ajeboplus — exact values from ajebo-plus (2).jsx
+const t = {
+  bg:          '#f0e6d0',
+  bgAlt:       '#e8dcc0',
+  surface:     '#faf4e4',
+  surfaceAlt:  '#f0e6d0',
+  ink:         '#1a0c04',
+  inkDim:      'rgba(26,12,4,0.7)',
+  inkMuted:    'rgba(26,12,4,0.5)',
+  accent:      '#c25a1c',
+  accentSoft:  '#e08246',
+  border:      'rgba(26,12,4,0.18)',
+  displayFont: "'Big Shoulders Stencil Display', 'Anton', sans-serif",
+  serifFont:   "'Fraunces', 'Playfair Display', serif",
+  bodyFont:    "'Inter', 'DM Sans', system-ui, sans-serif",
+  monoFont:    "'JetBrains Mono', 'DM Mono', monospace",
+};
 
-// Splash-derived palette — 3 colors, light arrangement
-const BG  = '#f5f0e6';              // ivory — the splash's own text/button color, now the page bg
-const CHR = '#1a0c04';              // deep dark brown — header bar (mirrors splash's dark backdrop)
-const INK = '#1a0c04';              // all text
-const ACC = '#d6b24a';              // gold — the splash's signature accent (PEPPER., button hover)
-const SRF = '#ede7d8';              // slightly deeper ivory — assistant bubbles / surfaces
-const BDR = 'rgba(26,12,4,0.12)';  // very subtle warm border
+const QUICK_PROMPTS = ["What's on the menu?", "Order Beef Suya", "Best seller?"];
 
 export default function ChatPage() {
-  const [messages, setMessages]               = useState([]);
-  const [input, setInput]                     = useState('');
-  const [loading, setLoading]                 = useState(false);
+  const [messages, setMessages]                   = useState([]);
+  const [input, setInput]                         = useState('');
+  const [loading, setLoading]                     = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
-  const [menu, setMenu]                       = useState({});
-  const [cart, setCart]                       = useState([]);
-  const [checkoutStep, setCheckoutStep]       = useState(null);
-  const [customerName, setCustomerName]       = useState('');
-  const [customerPhone, setCustomerPhone]     = useState('');
-  const [isRecording, setIsRecording]         = useState(false);
-  const [isTranscribing, setIsTranscribing]   = useState(false);
-  const messagesEndRef   = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef   = useRef([]);
-  const router           = useRouter();
+  const [menu, setMenu]                           = useState({});
+  const [cart, setCart]                           = useState([]);
+  const [checkoutStep, setCheckoutStep]           = useState(null);
+  const [customerName, setCustomerName]           = useState('');
+  const [customerPhone, setCustomerPhone]         = useState('');
+  const [isRecording, setIsRecording]             = useState(false);
+  const [isTranscribing, setIsTranscribing]       = useState(false);
+  const endRef            = useRef(null);
+  const mediaRecorderRef  = useRef(null);
+  const audioChunksRef    = useRef([]);
+  const router            = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
   useEffect(() => { fetchMenu(); fetchWelcome(); }, []);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+    endRef.current?.parentElement?.scrollTo({ top: 99999, behavior: 'smooth' });
+  }, [messages]);
 
   async function fetchMenu() {
     try {
@@ -53,7 +60,9 @@ export default function ChatPage() {
       const res  = await fetch(`${API}/chat/welcome`);
       const data = await res.json();
       setMessages([{ role: 'assistant', content: data.message }]);
-    } catch {}
+    } catch {
+      setMessages([{ role: 'assistant', content: "Welcome — I'm Soji. Tell me what you want and how you want it. Or tap anything from the menu below to get started." }]);
+    }
   }
 
   function addToCart(item) {
@@ -92,7 +101,7 @@ export default function ChatPage() {
             const json = JSON.parse(line.slice(6));
             if (json.token) {
               fullReply += json.token;
-              setMessages(prev => { const u = [...prev]; u[u.length-1] = { role: 'assistant', content: fullReply }; return u; });
+              setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: 'assistant', content: fullReply }; return u; });
             }
             if (json.done) updatedHistory = json.conversation_history;
           } catch {}
@@ -164,406 +173,339 @@ export default function ChatPage() {
     setIsRecording(false);
   }
 
-  const allMenuItems = Object.values(menu).flat();
+  const allItems = Object.values(menu).flat();
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* Lock viewport — nothing should ever scroll at page level */
-        html, body { height: 100%; overflow: hidden; background: ${BG}; }
-
-        /* The entire chat UI is a fixed overlay filling the screen */
-        .chat-layout {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          display: flex;
-          flex-direction: column;
-          background: ${BG};
-          color: ${INK};
-          font-family: 'DM Sans', sans-serif;
-        }
-
-        /* ── HEADER ── */
-        .chat-hdr {
-          flex-shrink: 0;
-          padding: 13px 24px;
-          background: ${CHR};
-          display: flex; justify-content: space-between; align-items: center;
-        }
-        .hdr-brand { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: #fff; }
-        .hdr-sub   { font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: 0.22em; color: rgba(255,255,255,0.65); margin-top: 1px; }
-        .hdr-back  {
-          background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.3);
-          color: #fff; width: 30px; height: 30px; cursor: pointer; font-size: 13px;
-          display: flex; align-items: center; justify-content: center; margin-right: 12px;
-          transition: background 0.15s;
-        }
-        .hdr-back:hover { background: rgba(255,255,255,0.22); }
-        .hdr-right { display: flex; }
-        .hdr-count {
-          padding: 7px 14px;
-          font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.14em;
-          border: 1.5px solid rgba(255,255,255,0.35); border-right: none;
-          color: #fff; background: rgba(255,255,255,0.1);
-        }
-        .hdr-checkout {
-          padding: 7px 16px;
-          font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.14em;
-          border: 1.5px solid rgba(255,255,255,0.35);
-          cursor: pointer; transition: background 0.15s, border-color 0.15s;
-        }
-        .hdr-checkout.active   { background: ${ACC}; color: ${INK}; border-color: ${ACC}; font-weight: 700; }
-        .hdr-checkout.inactive { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.35); cursor: not-allowed; }
-
-        /* ── MESSAGES — flex-grow fills remaining space, scrolls internally ── */
-        .msgs-wrap {
-          flex: 1 1 0;
-          min-height: 0;
-          overflow-y: auto;
-          padding: 24px 32px 16px;
-          display: flex;
-          flex-direction: column;
-          scrollbar-width: thin;
-          scrollbar-color: ${BDR} transparent;
-        }
-
-        .msg-group   { display: flex; flex-direction: column; margin-bottom: 18px; }
-        .msg-group.user      { align-items: flex-end; }
-        .msg-group.assistant { align-items: flex-start; }
-
-        .msg-label {
-          font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.2em; margin-bottom: 5px;
-        }
-        .msg-group.user .msg-label      { color: rgba(26,8,0,0.35); }
-        .msg-group.assistant .msg-label { color: ${ACC}; }
-
-        .bubble {
-          max-width: min(420px, 70vw);
-          padding: 12px 16px; font-size: 14px; line-height: 1.65;
-          border: 2px solid ${BDR};
-        }
-        .bubble.user      { background: ${INK}; color: ${BG}; border-color: ${INK}; }
-        .bubble.assistant { background: ${SRF}; color: ${INK}; font-family: 'Playfair Display', serif; }
-        .bubble.assistant p { margin-bottom: 6px; }
-        .bubble.assistant p:last-child { margin-bottom: 0; }
-        .bubble.assistant ul, .bubble.assistant ol { padding-left: 18px; }
-        .bubble.assistant li { margin-bottom: 3px; }
-
-        .typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
-        .dot { width: 6px; height: 6px; background: ${ACC}; border-radius: 50%; animation: bounce 1.2s infinite; }
-        .dot:nth-child(2) { animation-delay: 0.18s; }
-        .dot:nth-child(3) { animation-delay: 0.36s; }
+        html, body { height: 100%; overflow: hidden; }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
-
-        /* ── QUICK PROMPTS ── */
-        .prompts-wrap { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .prompt-btn {
-          background: ${SRF}; color: ${INK};
-          border: 2px solid ${BDR}; padding: 8px 14px;
-          font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em;
-          cursor: pointer; text-transform: uppercase; transition: all 0.15s;
-        }
-        .prompt-btn:hover { border-color: ${ACC}; background: ${BG}; color: ${ACC}; }
-
-        /* ── MENU RAIL (gold — from splash) ── */
-        .menu-rail {
-          flex-shrink: 0;
-          background: ${ACC};
-          padding: 10px 20px 12px;
-          border-top: 3px solid ${INK};
-        }
-        .rail-hdr   { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .rail-label { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.22em; color: rgba(26,12,4,0.6); }
-
-        .cart-chips { display: flex; gap: 5px; max-width: 55%; overflow-x: auto; scrollbar-width: none; }
-        .cart-chips::-webkit-scrollbar { display: none; }
-        .cart-chip {
-          flex-shrink: 0;
-          padding: 2px 8px; background: ${INK}; color: ${BG};
-          font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.06em;
-          display: flex; align-items: center; gap: 4px;
-        }
-        .chip-rm { background: none; border: none; color: ${BG}; cursor: pointer; font-size: 13px; padding: 0; line-height: 1; opacity: 0.55; }
-        .chip-rm:hover { opacity: 1; }
-
-        /* The scrollable row of menu cards */
-        .rail-scroll-wrap {
-          overflow-x: auto;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(26,12,4,0.25) transparent;
-          padding-bottom: 4px;
-        }
-        .rail-scroll-wrap::-webkit-scrollbar { height: 4px; }
-        .rail-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(26,12,4,0.25); border-radius: 4px; }
-        .rail-scroll-inner {
-          display: flex; gap: 8px;
-          width: max-content;
-        }
-
-        .menu-card {
-          width: 120px; height: 72px;
-          background: rgba(26,12,4,0.08); border: 1.5px solid rgba(26,12,4,0.2);
-          padding: 7px 10px; cursor: pointer; text-align: left;
-          display: flex; flex-direction: column; justify-content: space-between;
-          transition: background 0.12s, border-color 0.12s; flex-shrink: 0;
-        }
-        .menu-card:hover { background: rgba(26,12,4,0.15); border-color: rgba(26,12,4,0.4); }
-        .card-num   { font-family: 'Bebas Neue', sans-serif; font-size: 9px; color: rgba(26,12,4,0.5); letter-spacing: 0.14em; }
-        .card-name  { font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 600; line-height: 1.2; color: ${INK}; }
-        .card-price { font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: rgba(26,12,4,0.75); }
-
-        /* ── INPUT BAR ── */
-        .input-area {
-          flex-shrink: 0;
-          background: ${SRF};
-          border-top: 2px solid ${BDR};
-          padding: 11px 22px;
-          display: flex; gap: 0; align-items: stretch;
-        }
-        .chat-input {
-          flex: 1; background: ${BG}; border: 2px solid ${BDR}; border-right: none;
-          padding: 10px 15px; font-family: 'DM Sans', sans-serif; font-size: 14px;
-          color: ${INK}; outline: none; resize: none;
-          max-height: 76px; line-height: 1.5; transition: border-color 0.15s;
-        }
-        .chat-input:focus { border-color: ${ACC}; }
-        .chat-input::placeholder { color: rgba(26,8,0,0.3); }
-
-        .mic-btn {
-          background: ${BG}; border: 2px solid ${BDR}; border-right: none;
-          color: ${INK}; width: 42px; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.15s;
-        }
-        .mic-btn:hover { background: ${SRF}; }
-
-        .send-btn {
-          background: ${ACC}; color: #fff; border: 2px solid ${ACC};
-          padding: 0 22px; font-family: 'Bebas Neue', sans-serif; font-size: 15px;
-          letter-spacing: 0.14em; cursor: pointer; transition: background 0.15s;
-          white-space: nowrap;
-        }
-        .send-btn:disabled { background: rgba(26,12,4,0.1); border-color: rgba(26,12,4,0.1); color: rgba(26,12,4,0.3); cursor: not-allowed; }
-        .send-btn:not(:disabled):hover { background: #b8941e; border-color: #b8941e; }
-
-        /* ── RECORDING ── */
-        .recording-wrap {
-          flex: 1; display: flex; align-items: center; gap: 10px;
-          border: 2px solid #c0392b; background: #fff5f5; padding: 10px 14px;
-        }
-        .waveform { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-        .wave-bar { width: 3px; border-radius: 2px; background: #c0392b; animation: wave 1s ease-in-out infinite; }
-        .wave-bar:nth-child(1){height:7px;animation-delay:0s}
-        .wave-bar:nth-child(2){height:14px;animation-delay:.1s}
-        .wave-bar:nth-child(3){height:20px;animation-delay:.2s}
-        .wave-bar:nth-child(4){height:14px;animation-delay:.3s}
-        .wave-bar:nth-child(5){height:7px;animation-delay:.4s}
-        @keyframes wave{0%,100%{transform:scaleY(1);opacity:.5}50%{transform:scaleY(1.8);opacity:1}}
-        .rec-label { flex: 1; font-size: 13px; color: #c0392b; font-style: italic; }
-        .confirm-btn { width: 34px; height: 34px; border-radius: 50%; background: #27ae60; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .cancel-btn  { width: 34px; height: 34px; border-radius: 50%; background: transparent; border: 1.5px solid #c0392b; color: #c0392b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; flex-shrink: 0; }
-        .cancel-btn:hover { background: #c0392b; color: #fff; }
-
-        /* ── MODAL ── */
-        .modal-overlay {
-          position: fixed; inset: 0; background: rgba(26,8,0,0.5);
-          z-index: 60; display: flex; align-items: center; justify-content: center;
-          backdrop-filter: blur(5px);
-        }
-        .modal {
-          background: ${BG}; border: 2px solid ${INK};
-          width: 340px; padding: 32px 28px;
-          box-shadow: 6px 6px 0 ${INK};
-          animation: fadeUp 0.25s ease;
-        }
+        @keyframes wave { 0%,100%{transform:scaleY(1);opacity:.5} 50%{transform:scaleY(1.8);opacity:1} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        .modal-icon  { font-size: 22px; margin-bottom: 14px; }
-        .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: ${INK}; margin-bottom: 4px; }
-        .modal-sub   { font-size: 13px; color: rgba(26,8,0,0.5); margin-bottom: 20px; line-height: 1.5; }
-        .modal-input {
-          width: 100%; background: ${SRF}; border: 2px solid ${BDR};
-          padding: 12px 14px; color: ${INK};
-          font-family: 'DM Sans', sans-serif; font-size: 14px;
-          outline: none; margin-bottom: 10px; transition: border-color 0.15s;
-        }
-        .modal-input:focus { border-color: ${ACC}; }
-        .modal-input::placeholder { color: rgba(26,8,0,0.3); }
-        .modal-btn {
-          width: 100%; padding: 12px; background: ${ACC}; color: #fff;
-          border: none; font-family: 'Bebas Neue', sans-serif; font-size: 15px;
-          letter-spacing: 0.14em; cursor: pointer; transition: background 0.15s;
-        }
-        .modal-btn:hover { background: #b8941e; }
-
-        @media (max-width: 600px) {
-          .msgs-wrap  { padding: 14px 14px 10px; }
-          .input-area { padding: 8px 12px; }
-          .bubble     { max-width: 84vw; }
-          .chat-hdr   { padding: 11px 14px; }
-          .menu-rail  { padding: 8px 14px 10px; }
-        }
+        *::-webkit-scrollbar { width: 4px; height: 4px; }
+        *::-webkit-scrollbar-thumb { background: rgba(26,12,4,0.15); border-radius: 2px; }
+        *::-webkit-scrollbar-track { background: transparent; }
       `}</style>
 
-      <div className="chat-layout">
+      <div style={{
+        width: '100%', height: '100%',
+        background: `radial-gradient(ellipse 100% 70% at 50% 0%, ${t.surface} 0%, ${t.bg} 60%, ${t.bgAlt} 100%)`,
+        color: t.ink, fontFamily: t.bodyFont,
+        display: 'grid', gridTemplateRows: 'auto 1fr auto auto',
+        gridTemplateColumns: 'minmax(0, 1fr)', overflow: 'hidden',
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      }}>
 
-        {/* HEADER */}
-        <div className="chat-hdr">
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button className="hdr-back" onClick={() => router.push('/')}>←</button>
+        {/* ── HEADER ── */}
+        <div style={{
+          padding: '14px 28px', borderBottom: '1.5px solid rgba(255,255,255,0.2)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: t.accent,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={() => router.push('/')} style={{
+              background: 'transparent', border: '1.5px solid rgba(255,255,255,0.6)', color: '#fff',
+              width: 32, height: 32, cursor: 'pointer', borderRadius: '50%', fontSize: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>←</button>
             <div>
-              <div className="hdr-brand">UNCLE SOJI'S</div>
-              <div className="hdr-sub">● CHAT · SOJI IS LIVE</div>
+              <div style={{ fontFamily: t.displayFont, fontSize: 17, fontWeight: 700, letterSpacing: '0.02em', whiteSpace: 'nowrap', color: '#fff' }}>
+                UNCLE SOJI'S
+              </div>
+              <div style={{ fontFamily: t.monoFont, fontSize: 9, letterSpacing: '0.24em', color: 'rgba(255,255,255,0.85)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', display: 'inline-block', animation: 'pulseDot 1.6s infinite' }}/>
+                SOJI IS LIVE
+              </div>
             </div>
           </div>
-          <div className="hdr-right">
-            <div className="hdr-count">{cartCount} {cartCount === 1 ? 'ITEM' : 'ITEMS'}</div>
-            <button
-              className={`hdr-checkout ${cartCount > 0 ? 'active' : 'inactive'}`}
-              onClick={handleCartCheckout} disabled={cartCount === 0}
-            >
-              CHECKOUT · ₦{cartTotal.toLocaleString()}
-            </button>
-          </div>
+
+          <button onClick={handleCartCheckout} disabled={!cartCount} style={{
+            padding: '9px 18px', fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.2em',
+            background: cartCount ? t.ink : 'transparent',
+            color: cartCount ? t.accent : t.inkMuted,
+            border: `1.5px solid ${cartCount ? t.ink : 'rgba(26,12,4,0.3)'}`,
+            cursor: cartCount ? 'pointer' : 'not-allowed', fontWeight: 700,
+            borderRadius: 100, whiteSpace: 'nowrap',
+          }}>
+            {cartCount > 0 ? `CHECKOUT · ${cartCount} · ₦${cartTotal.toLocaleString()}` : 'CART · EMPTY'}
+          </button>
         </div>
 
-        {/* MESSAGES */}
-        <div className="msgs-wrap">
-          {(() => {
-            const groups = [];
-            messages.forEach((msg, i) => {
-              const prev = messages[i - 1];
-              if (prev && prev.role === msg.role) groups[groups.length - 1].push(msg);
-              else groups.push([msg]);
-            });
-            return groups.map((group, gi) => {
-              const isLast = gi === groups.length - 1;
-              return (
-                <div key={gi} className={`msg-group ${group[0].role}`}>
-                  <div className="msg-label">{group[0].role === 'user' ? '→ YOU' : '→ SOJI'}</div>
-                  {group.map((msg, ri) => {
-                    const isLastMsg = ri === group.length - 1;
-                    const isTyping  = msg.role === 'assistant' && loading && isLast && isLastMsg && msg.content === '';
-                    return (
-                      <div key={ri} style={{ marginBottom: ri < group.length - 1 ? 4 : 0 }}>
-                        <div className={`bubble ${msg.role}`}>
-                          {isTyping ? (
-                            <div className="typing"><div className="dot"/><div className="dot"/><div className="dot"/></div>
-                          ) : msg.role === 'assistant' ? (
-                            <ReactMarkdown>{msg.content.split('[ORDER_CONFIRMED]')[0].trim()}</ReactMarkdown>
-                          ) : msg.content}
-                        </div>
+        {/* ── MESSAGES ── */}
+        <div style={{ overflowY: 'auto', padding: '28px 40px' }}>
+          {messages.map((m, i) => {
+            const isLast   = i === messages.length - 1;
+            const isTyping = m.role === 'assistant' && loading && isLast && m.content === '';
+            return (
+              <div key={i} style={{
+                display: 'flex', marginBottom: 18,
+                justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
+              }}>
+                {m.role === 'assistant' && (
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', background: t.accent,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: t.displayFont, color: '#fff', fontSize: 14,
+                    marginRight: 10, flexShrink: 0, fontWeight: 700, alignSelf: 'flex-end',
+                  }}>S</div>
+                )}
+                <div style={{ maxWidth: '70%' }}>
+                  <div style={{
+                    fontFamily: t.monoFont, fontSize: 9, letterSpacing: '0.24em',
+                    color: m.role === 'user' ? t.inkMuted : t.accent, marginBottom: 4,
+                    textAlign: m.role === 'user' ? 'right' : 'left',
+                  }}>
+                    {m.role === 'user' ? '→ YOU' : '→ SOJI'}
+                  </div>
+                  <div style={{
+                    background: m.role === 'user' ? t.ink : t.surface,
+                    color: m.role === 'user' ? t.bg : t.ink,
+                    padding: '14px 18px', fontSize: 15, lineHeight: 1.55,
+                    border: m.role === 'assistant' ? `1.5px solid ${t.border}` : 'none',
+                    borderRadius: m.role === 'user' ? '20px 20px 6px 20px' : '6px 20px 20px 20px',
+                    fontFamily: m.role === 'assistant' ? t.serifFont : t.bodyFont,
+                    fontStyle: m.role === 'assistant' ? 'italic' : 'normal',
+                  }}>
+                    {isTyping ? (
+                      <div style={{ display: 'flex', gap: 5, alignItems: 'center', padding: '4px 0' }}>
+                        {[0, 0.18, 0.36].map((delay, d) => (
+                          <div key={d} style={{ width: 6, height: 6, background: t.accent, borderRadius: '50%', animation: `bounce 1.2s ${delay}s infinite` }}/>
+                        ))}
                       </div>
-                    );
-                  })}
+                    ) : m.role === 'assistant' ? (
+                      <ReactMarkdown>{m.content.split('[ORDER_CONFIRMED]')[0].trim()}</ReactMarkdown>
+                    ) : m.content}
+                  </div>
                 </div>
-              );
-            });
-          })()}
+              </div>
+            );
+          })}
 
           {messages.length <= 1 && !loading && (
-            <div className="prompts-wrap">
-              {QUICK_PROMPTS.map((p, i) => (
-                <button key={i} className="prompt-btn" onClick={() => sendMessage(p)}>{p} →</button>
-              ))}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontFamily: t.monoFont, fontSize: 9, letterSpacing: '0.24em', color: t.inkMuted, marginBottom: 10 }}>
+                → START WITH
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {QUICK_PROMPTS.map((p, i) => (
+                  <button key={i} onClick={() => sendMessage(p)} style={{
+                    background: t.surface, color: t.ink, border: `1.5px solid ${t.border}`,
+                    padding: '10px 18px', fontFamily: t.serifFont, fontStyle: 'italic',
+                    fontSize: 13.5, cursor: 'pointer', borderRadius: 100,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = t.accent; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = t.accent; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = t.surface; e.currentTarget.style.color = t.ink; e.currentTarget.style.borderColor = t.border; }}
+                  >{p}</button>
+                ))}
+              </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={endRef} />
         </div>
 
-        {/* MENU RAIL */}
-        <div className="menu-rail">
-          <div className="rail-hdr">
-            <div className="rail-label">→ THE MENU · TAP TO ADD</div>
+        {/* ── MENU RAIL — horizontal, alternating accent cards every 4th (idx % 4 === 0) ── */}
+        <div style={{
+          borderTop: '1.5px solid rgba(255,255,255,0.2)', padding: '16px 28px 18px',
+          background: t.accent,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.24em', color: '#fff' }}>
+              → THE MENU · TAP TO ADD TO CART
+            </div>
             {cartCount > 0 && (
-              <div className="cart-chips">
+              <div style={{ display: 'flex', gap: 6, fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.1em', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {cart.map(i => (
-                  <span key={i.name} className="cart-chip">
+                  <span key={i.name} style={{
+                    padding: '3px 10px', background: t.ink, color: t.accent, borderRadius: 100,
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                  }}>
                     {i.name.split(' ')[0].toUpperCase()}×{i.quantity}
-                    <button className="chip-rm" onClick={() => removeFromCart(i.name)}>×</button>
+                    <button onClick={() => removeFromCart(i.name)} style={{
+                      background: 'none', border: 'none', color: t.ink, cursor: 'pointer', fontSize: 12, padding: 0,
+                    }}>×</button>
                   </span>
                 ))}
               </div>
             )}
           </div>
-          <div className="rail-scroll-wrap">
-            <div className="rail-scroll-inner">
-              {allMenuItems.map((item, idx) => (
-                <button key={item.id} className="menu-card" onClick={() => addToCart(item)}>
-                  <div className="card-num">→ {String(idx + 1).padStart(2, '0')}</div>
-                  <div className="card-name">{item.name}</div>
-                  <div className="card-price">₦{item.price.toLocaleString()}</div>
-                </button>
-              ))}
+
+          {allItems.length === 0 ? (
+            <div style={{ fontFamily: t.monoFont, fontSize: 10, color: t.inkMuted, letterSpacing: '0.18em', padding: '8px 0' }}>
+              LOADING MENU… · START THE BACKEND TO SEE ITEMS
             </div>
-          </div>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <div
+                id="menu-rail"
+                style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, minWidth: 0, scrollbarWidth: 'thin', scrollbarColor: `${t.ink} transparent` }}
+              >
+                {allItems.map((item, idx) => (
+                  <button key={item.id} onClick={() => addToCart(item)} style={{
+                    flexShrink: 0, width: 158,
+                    background: t.surface, color: t.ink,
+                    border: `1.5px solid ${t.ink}`,
+                    padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
+                    borderRadius: 14,
+                    display: 'flex', flexDirection: 'column', gap: 4,
+                    transition: 'transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s, border-color 0.15s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = t.accent;
+                    e.currentTarget.style.color = '#fff';
+                    e.currentTarget.style.borderColor = t.accent;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(26,12,4,0.12)';
+                    e.currentTarget.querySelector('.item-num').style.color = 'rgba(255,255,255,0.7)';
+                    e.currentTarget.querySelector('.item-price').style.color = '#fff';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = t.surface;
+                    e.currentTarget.style.color = t.ink;
+                    e.currentTarget.style.borderColor = t.ink;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.querySelector('.item-num').style.color = t.accent;
+                    e.currentTarget.querySelector('.item-price').style.color = t.ink;
+                  }}
+                  >
+                    <div className="item-num" style={{ fontFamily: t.monoFont, fontSize: 9, color: t.accent, letterSpacing: '0.18em' }}>
+                      → {String(idx + 1).padStart(2, '0')}
+                    </div>
+                    <div style={{ fontFamily: t.serifFont, fontSize: 16, fontWeight: 700, lineHeight: 1.1 }}>
+                      {item.name}
+                    </div>
+                    <div className="item-price" style={{ fontFamily: t.monoFont, fontSize: 12, fontWeight: 700, marginTop: 2, color: t.ink }}>
+                      ₦{item.price.toLocaleString()}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {/* Scroll hint arrow */}
+              <div style={{
+                position: 'absolute', right: 0, top: 0, bottom: 4,
+                width: 48, pointerEvents: 'none',
+                background: `linear-gradient(to right, transparent, ${t.accent})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: t.ink, color: t.bg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13, marginRight: 2, flexShrink: 0,
+                }}>›</div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* INPUT */}
-        <div className="input-area">
-          {isTranscribing ? (
-            <div className="recording-wrap">
-              <div className="waveform"><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/></div>
-              <div className="rec-label">Transcribing your order…</div>
-            </div>
-          ) : isRecording ? (
-            <div className="recording-wrap">
-              <div className="waveform"><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/><div className="wave-bar"/></div>
-              <div className="rec-label">Listening — speak your order…</div>
-              <button className="cancel-btn" onClick={cancelVoice}>×</button>
-              <button className="confirm-btn" onClick={confirmVoice}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </button>
+        {/* ── INPUT — pill style with voice ── */}
+        <div style={{
+          padding: '14px 28px', borderTop: `1.5px solid ${t.ink}`, background: t.surface,
+          display: 'flex', gap: 10, alignItems: 'center',
+        }}>
+          {isTranscribing || isRecording ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#fff5f5', border: '1.5px solid #c0392b', padding: '10px 16px', borderRadius: 100 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                {[0, 0.1, 0.2, 0.3, 0.4].map((d, i) => (
+                  <div key={i} style={{ width: 3, borderRadius: 2, background: '#c0392b', animation: `wave 1s ${d}s ease-in-out infinite`, height: [7, 14, 20, 14, 7][i] }}/>
+                ))}
+              </div>
+              <div style={{ flex: 1, fontSize: 13, color: '#c0392b', fontStyle: 'italic' }}>
+                {isTranscribing ? 'Transcribing your order…' : 'Listening — speak your order…'}
+              </div>
+              {isRecording && <>
+                <button onClick={cancelVoice} style={{ width: 34, height: 34, borderRadius: '50%', background: 'transparent', border: '1.5px solid #c0392b', color: '#c0392b', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>×</button>
+                <button onClick={confirmVoice} style={{ width: 34, height: 34, borderRadius: '50%', background: '#27ae60', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+              </>}
             </div>
           ) : (
             <>
-              <textarea
-                className="chat-input"
-                placeholder="Type your order or ask a question…"
-                value={input} rows={1}
-                suppressHydrationWarning
-                onChange={e => {
-                  setInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 76) + 'px';
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') sendMessage(input); }}
+                placeholder="Say what you want, or just 'menu'…"
+                style={{
+                  flex: 1, background: t.bg, border: `1.5px solid ${t.border}`,
+                  padding: '12px 22px', fontFamily: t.bodyFont, fontSize: 14, outline: 'none',
+                  color: t.ink, borderRadius: 100,
                 }}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
+                onFocus={e => e.currentTarget.style.borderColor = t.accent}
+                onBlur={e => e.currentTarget.style.borderColor = t.border}
               />
-              <button className="mic-btn" onClick={startVoice} title="Speak your order">
+              <button onClick={startVoice} title="Speak your order" style={{
+                width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                background: t.bg, border: `1.5px solid ${t.border}`, color: t.ink,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="9" y="2" width="6" height="12" rx="3"/>
                   <path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
                 </svg>
               </button>
-              <button className="send-btn" onClick={() => sendMessage(input)} disabled={loading || !input.trim()}>SEND →</button>
+              <button onClick={() => sendMessage(input)} disabled={loading || !input.trim()} style={{
+                background: (!loading && input.trim()) ? t.accent : t.border,
+                color: (!loading && input.trim()) ? '#fff' : t.inkMuted,
+                border: 'none', width: 44, height: 44, borderRadius: '50%',
+                cursor: (!loading && input.trim()) ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
             </>
           )}
         </div>
       </div>
 
-      {/* CHECKOUT MODAL */}
+      {/* ── CHECKOUT MODAL ── */}
       {checkoutStep && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setCheckoutStep(null); }}>
-          <div className="modal">
+        <div onClick={e => { if (e.target === e.currentTarget) setCheckoutStep(null); }} style={{
+          position: 'fixed', inset: 0, background: 'rgba(26,12,4,0.5)',
+          zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(6px)',
+        }}>
+          <div style={{
+            background: t.surface, border: `1.5px solid ${t.ink}`,
+            width: 340, padding: '32px 28px', borderRadius: 20,
+            boxShadow: '0 24px 64px rgba(26,12,4,0.2)',
+            animation: 'fadeUp 0.25s ease',
+          }}>
             {checkoutStep === 'name' && <>
-              <div className="modal-icon">👤</div>
-              <div className="modal-title">ALMOST THERE</div>
-              <div className="modal-sub">What name should we put on your order?</div>
-              <input className="modal-input" placeholder="Your full name" value={customerName}
+              <div style={{ fontSize: 22, marginBottom: 14 }}>👤</div>
+              <div style={{ fontFamily: t.displayFont, fontSize: 28, fontWeight: 700, color: t.ink, marginBottom: 4 }}>ALMOST THERE</div>
+              <div style={{ fontSize: 13, color: t.inkMuted, marginBottom: 20, lineHeight: 1.5 }}>What name should we put on your order?</div>
+              <input placeholder="Your full name" value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleCartCheckout()} autoFocus />
-              <button className="modal-btn" onClick={handleCartCheckout}>CONTINUE →</button>
+                onKeyDown={e => e.key === 'Enter' && handleCartCheckout()} autoFocus
+                style={{ width: '100%', background: t.bg, border: `1.5px solid ${t.border}`, padding: '12px 18px', color: t.ink, borderRadius: 100, fontFamily: t.bodyFont, fontSize: 14, outline: 'none', marginBottom: 10 }}
+                onFocus={e => e.currentTarget.style.borderColor = t.accent}
+                onBlur={e => e.currentTarget.style.borderColor = t.border}
+              />
+              <button onClick={handleCartCheckout} style={{ width: '100%', padding: 13, background: t.accent, color: '#fff', border: 'none', borderRadius: 100, fontFamily: t.monoFont, fontSize: 12, letterSpacing: '0.18em', fontWeight: 700, cursor: 'pointer' }}>
+                CONTINUE →
+              </button>
             </>}
             {checkoutStep === 'phone' && <>
-              <div className="modal-icon">📱</div>
-              <div className="modal-title">ONE LAST THING</div>
-              <div className="modal-sub">We'll reach you on this number once payment clears.</div>
-              <input className="modal-input" placeholder="08XXXXXXXXX" value={customerPhone}
+              <div style={{ fontSize: 22, marginBottom: 14 }}>📱</div>
+              <div style={{ fontFamily: t.displayFont, fontSize: 28, fontWeight: 700, color: t.ink, marginBottom: 4 }}>ONE LAST THING</div>
+              <div style={{ fontSize: 13, color: t.inkMuted, marginBottom: 20, lineHeight: 1.5 }}>We'll reach you on this number once payment clears.</div>
+              <input placeholder="08XXXXXXXXX" value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleCartCheckout()} autoFocus />
-              <button className="modal-btn" onClick={handleCartCheckout}>PLACE ORDER →</button>
+                onKeyDown={e => e.key === 'Enter' && handleCartCheckout()} autoFocus
+                style={{ width: '100%', background: t.bg, border: `1.5px solid ${t.border}`, padding: '12px 18px', color: t.ink, borderRadius: 100, fontFamily: t.bodyFont, fontSize: 14, outline: 'none', marginBottom: 10 }}
+                onFocus={e => e.currentTarget.style.borderColor = t.accent}
+                onBlur={e => e.currentTarget.style.borderColor = t.border}
+              />
+              <button onClick={handleCartCheckout} style={{ width: '100%', padding: 13, background: t.accent, color: '#fff', border: 'none', borderRadius: 100, fontFamily: t.monoFont, fontSize: 12, letterSpacing: '0.18em', fontWeight: 700, cursor: 'pointer' }}>
+                PLACE ORDER →
+              </button>
             </>}
           </div>
         </div>
