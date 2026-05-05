@@ -336,12 +336,19 @@ export default function ChatPage() {
           </div>
 
           {allItems === null ? (
-            <div style={{ fontFamily: t.serifFont, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.85)', padding: '10px 0', lineHeight: 1.5 }}>
-              Just a minute — we're pulling up the menu for you. It'll appear here shortly.
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[0, 0.15, 0.3].map((d, i) => (
+                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', animation: `bounce 1.2s ${d}s infinite` }}/>
+                ))}
+              </div>
+              <div style={{ fontFamily: t.serifFont, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.9)' }}>
+                Give us a moment — we're getting the menu ready for you…
+              </div>
             </div>
           ) : allItems.length === 0 ? (
             <div style={{ fontFamily: t.serifFont, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.85)', padding: '10px 0' }}>
-              No menu items found. Check back soon.
+              The menu isn't showing right now — try refreshing in a moment.
             </div>
           ) : (
             <div style={{ position: 'relative' }}>
