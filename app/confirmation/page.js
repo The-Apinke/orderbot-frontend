@@ -49,14 +49,14 @@ function ConfirmationContent() {
         @keyframes fadeUp { from{opacity:0;transform:rotate(-7deg) translateY(8px)} to{opacity:1;transform:rotate(-7deg) translateY(0)} }
 
         .receipt {
-          background: ${BG}; border: 1.5px solid ${INK};
+          background: ${BG}; border: 1.5px solid ${ACC};
           animation: slideUp 0.4s ease both;
         }
         @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
         /* Receipt header */
         .r-head {
-          padding: 22px 24px 18px; border-bottom: 1.5px solid ${INK}; text-align: center;
+          padding: 22px 24px 18px; border-bottom: 1.5px solid ${ACC}; text-align: center;
         }
         .r-brand {
           font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 0.04em;
@@ -66,16 +66,16 @@ function ConfirmationContent() {
         }
 
         /* Meta grid */
-        .r-meta { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid ${INK}; }
+        .r-meta { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid ${ACC}; }
         .meta-cell { padding: 12px 16px; }
-        .meta-cell:nth-child(odd)  { border-right: 1.5px solid ${INK}; }
+        .meta-cell:nth-child(odd)  { border-right: 1.5px solid ${ACC}; }
         .meta-cell:nth-child(3),
         .meta-cell:nth-child(4)    { border-top: 1px dashed ${BDR}; }
         .meta-key { font-family: monospace; font-size: 8px; letter-spacing: 0.22em; color: rgba(26,12,4,0.4); margin-bottom: 4px; }
         .meta-val { font-family: monospace; font-size: 12px; font-weight: 700; }
 
         /* Details */
-        .r-detail { padding: 14px 18px; border-bottom: 1.5px solid ${INK}; }
+        .r-detail { padding: 14px 18px; border-bottom: 1.5px solid ${ACC}; }
         .detail-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px; }
         .detail-row:last-child { margin-bottom: 0; }
         .detail-key { font-family: monospace; font-size: 9px; letter-spacing: 0.16em; color: rgba(26,12,4,0.45); }
@@ -94,12 +94,12 @@ function ConfirmationContent() {
         }
 
         /* Pay section */
-        .r-pay { padding: 16px 18px; border-bottom: 1.5px solid ${INK}; }
+        .r-pay { padding: 16px 18px; border-bottom: 1.5px solid ${ACC}; }
         .pay-label { font-family: monospace; font-size: 9px; letter-spacing: 0.22em; color: ${ACC}; margin-bottom: 10px; }
 
         /* Footer tear */
         .r-tear {
-          padding: 10px; border-top: 1px dashed ${INK}; text-align: center;
+          padding: 10px; border-top: 1px dashed ${ACC}; text-align: center;
           font-family: monospace; font-size: 9px; letter-spacing: 0.22em;
           color: rgba(26,12,4,0.3);
         }
@@ -111,7 +111,7 @@ function ConfirmationContent() {
           background: #25D366; color: #fff;
           text-decoration: none; font-family: monospace; font-size: 10px;
           letter-spacing: 0.18em; font-weight: 700;
-          border: 1.5px solid ${INK};
+          border: 1.5px solid ${ACC};
           transition: opacity 0.15s;
         }
         .wa-btn:hover { opacity: 0.88; }
@@ -119,7 +119,7 @@ function ConfirmationContent() {
         .new-order-btn {
           display: block; width: 100%; margin-top: 8px; padding: 13px;
           background: transparent; color: ${INK};
-          border: 1.5px solid ${INK}; text-align: center;
+          border: 1.5px solid ${ACC}; text-align: center;
           font-family: monospace; font-size: 10px; letter-spacing: 0.18em;
           font-weight: 700; cursor: pointer; text-decoration: none;
           transition: background 0.15s, color 0.15s;

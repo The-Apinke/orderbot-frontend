@@ -29,7 +29,8 @@ export default function ChatPage() {
   const [input, setInput]                         = useState('');
   const [loading, setLoading]                     = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
-  const [menu, setMenu]                           = useState({});
+  const [menu, setMenu]                           = useState(null);
+  const menuRailRef = useRef(null);
   const [cart, setCart]                           = useState([]);
   const [checkoutStep, setCheckoutStep]           = useState(null);
   const [customerName, setCustomerName]           = useState('');
@@ -51,8 +52,10 @@ export default function ChatPage() {
     try {
       const res  = await fetch(`${API}/menu`);
       const data = await res.json();
-      setMenu(data.menu);
-    } catch {}
+      setMenu(data.menu ?? {});
+    } catch {
+      setMenu({});
+    }
   }
 
   async function fetchWelcome() {
@@ -173,7 +176,7 @@ export default function ChatPage() {
     setIsRecording(false);
   }
 
-  const allItems = Object.values(menu).flat();
+  const allItems = menu ? Object.values(menu).flat() : null;
 
   return (
     <>
@@ -224,9 +227,9 @@ export default function ChatPage() {
 
           <button onClick={handleCartCheckout} disabled={!cartCount} style={{
             padding: '9px 18px', fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.2em',
-            background: cartCount ? t.ink : 'transparent',
-            color: cartCount ? t.accent : t.inkMuted,
-            border: `1.5px solid ${cartCount ? t.ink : 'rgba(26,12,4,0.3)'}`,
+            background: cartCount ? '#fff' : 'transparent',
+            color: cartCount ? t.accent : 'rgba(255,255,255,0.6)',
+            border: `1.5px solid ${cartCount ? '#fff' : 'rgba(255,255,255,0.5)'}`,
             cursor: cartCount ? 'pointer' : 'not-allowed', fontWeight: 700,
             borderRadius: 100, whiteSpace: 'nowrap',
           }}>
@@ -319,12 +322,12 @@ export default function ChatPage() {
               <div style={{ display: 'flex', gap: 6, fontFamily: t.monoFont, fontSize: 10, letterSpacing: '0.1em', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {cart.map(i => (
                   <span key={i.name} style={{
-                    padding: '3px 10px', background: t.ink, color: t.accent, borderRadius: 100,
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '3px 10px', background: '#fff', color: t.ink, borderRadius: 100,
+                    display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600,
                   }}>
                     {i.name.split(' ')[0].toUpperCase()}×{i.quantity}
                     <button onClick={() => removeFromCart(i.name)} style={{
-                      background: 'none', border: 'none', color: t.ink, cursor: 'pointer', fontSize: 12, padding: 0,
+                      background: 'none', border: 'none', color: t.accent, cursor: 'pointer', fontSize: 12, padding: 0, fontWeight: 700,
                     }}>×</button>
                   </span>
                 ))}
@@ -332,15 +335,19 @@ export default function ChatPage() {
             )}
           </div>
 
-          {allItems.length === 0 ? (
-            <div style={{ fontFamily: t.monoFont, fontSize: 10, color: t.inkMuted, letterSpacing: '0.18em', padding: '8px 0' }}>
-              LOADING MENU… · START THE BACKEND TO SEE ITEMS
+          {allItems === null ? (
+            <div style={{ fontFamily: t.serifFont, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.85)', padding: '10px 0', lineHeight: 1.5 }}>
+              Just a minute — we're pulling up the menu for you. It'll appear here shortly.
+            </div>
+          ) : allItems.length === 0 ? (
+            <div style={{ fontFamily: t.serifFont, fontStyle: 'italic', fontSize: 14, color: 'rgba(255,255,255,0.85)', padding: '10px 0' }}>
+              No menu items found. Check back soon.
             </div>
           ) : (
             <div style={{ position: 'relative' }}>
               <div
-                id="menu-rail"
-                style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, minWidth: 0, scrollbarWidth: 'thin', scrollbarColor: `${t.ink} transparent` }}
+                ref={menuRailRef}
+                style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, minWidth: 0, scrollbarWidth: 'thin', scrollbarColor: `rgba(255,255,255,0.4) transparent` }}
               >
                 {allItems.map((item, idx) => (
                   <button key={item.id} onClick={() => addToCart(item)} style={{
@@ -383,19 +390,25 @@ export default function ChatPage() {
                   </button>
                 ))}
               </div>
-              {/* Scroll hint arrow */}
+              {/* Scroll arrow — clickable */}
               <div style={{
                 position: 'absolute', right: 0, top: 0, bottom: 4,
-                width: 48, pointerEvents: 'none',
+                width: 52, pointerEvents: 'none',
                 background: `linear-gradient(to right, transparent, ${t.accent})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
               }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%',
-                  background: t.ink, color: t.bg,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, marginRight: 2, flexShrink: 0,
-                }}>›</div>
+                <button
+                  onClick={() => menuRailRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+                  style={{
+                    pointerEvents: 'auto',
+                    width: 30, height: 30, borderRadius: '50%',
+                    background: '#fff', color: t.accent,
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, fontWeight: 700, marginRight: 2, flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(26,12,4,0.2)',
+                  }}
+                >›</button>
               </div>
             </div>
           )}
