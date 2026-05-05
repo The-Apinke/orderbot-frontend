@@ -3,10 +3,10 @@ import { useRouter } from 'next/navigation'
 import { CircularRevealHeading } from '@/components/ui/circular-reveal-heading'
 
 const ITEMS = [
-  { text: 'RAM SUYA',     image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=400&q=80' },
-  { text: 'BEEF SUYA',   image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
-  { text: 'CHICKEN SUYA',image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=400&q=80' },
-  { text: 'GIZZARD',     image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80' },
+  { text: 'RAM SUYA',     image: '/ram%20suya.jpg' },
+  { text: 'BEEF SUYA',   image: '/beef%20suya.jpg' },
+  { text: 'CHICKEN SUYA',image: '/chicken.jpg' },
+  { text: 'GIZZARD',     image: '/gizzard%20suya.png' },
 ]
 
 const MENU_TAGS = ['#01 BEEF SUYA', '#02 RAM SUYA', '#03 CHICKEN', '#04 GIZZARD', '#05 KILISHI']
