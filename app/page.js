@@ -46,8 +46,10 @@ export default function Home() {
           .splash-bottombar { display: none !important; }
 
           .splash-hero {
-            grid-template-columns: 1fr !important;
-            grid-template-rows: 1fr auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
             padding: 0 !important;
             gap: 0 !important;
           }
@@ -55,11 +57,9 @@ export default function Home() {
           /* Plate fills the top portion */
           .splash-center {
             order: 1;
-            justify-self: center;
-            align-self: center;
             transform: scale(0.82);
             transform-origin: center center;
-            margin: -60px 0 -70px;
+            margin-bottom: -80px;
           }
 
           /* Right panel hidden */
