@@ -70,7 +70,7 @@ export default function Home() {
             order: 2;
             text-align: center;
             padding: 0 28px 12px;
-            margin-top: 40px;
+            margin-top: 58px;
             display: flex !important;
             flex-direction: column;
             align-items: center;
