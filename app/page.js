@@ -59,7 +59,7 @@ export default function Home() {
             align-self: center;
             transform: scale(0.82);
             transform-origin: center center;
-            margin: -30px 0;
+            margin: -60px 0 -70px;
           }
 
           /* Right panel hidden */
@@ -69,26 +69,27 @@ export default function Home() {
           .splash-left {
             order: 2;
             text-align: center;
-            padding: 0 28px 24px;
+            padding: 0 28px 12px;
             display: flex !important;
             flex-direction: column;
             align-items: center;
           }
           .splash-left > div:first-child {
-            font-size: 56px !important;
+            font-size: 52px !important;
             line-height: 0.88 !important;
           }
           .splash-left > div:nth-child(2) {
-            font-size: 13px !important;
+            font-size: 12px !important;
             max-width: 280px !important;
-            margin-top: 12px !important;
+            margin-top: 8px !important;
+            line-height: 1.4 !important;
           }
           .start-btn {
-            margin-top: 18px !important;
+            margin-top: 14px !important;
             width: 100% !important;
             justify-content: center !important;
             font-size: 12px !important;
-            padding: 14px 24px !important;
+            padding: 13px 24px !important;
           }
         }
       `}</style>
