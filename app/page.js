@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <main style={{
-      minHeight: '100vh', overflow: 'hidden',
+      height: '100vh', overflow: 'hidden',
       background: 'linear-gradient(160deg, #3a1600 0%, #5c2400 40%, #3a1200 100%)',
       display: 'grid', gridTemplateRows: 'auto 1fr auto',
       fontFamily: "'DM Sans', sans-serif", color: '#f5f0e6',
@@ -44,33 +44,34 @@ export default function Home() {
           .splash-hero {
             grid-template-columns: 1fr !important;
             grid-template-rows: auto auto auto !important;
-            padding: 24px 28px !important;
+            padding: 8px 24px 0 !important;
             gap: 0 !important;
-            overflow-y: auto !important;
+            align-items: center !important;
           }
           .splash-left {
             order: 2;
             text-align: center;
-            padding-top: 20px;
+            padding-top: 4px;
           }
-          .splash-left .start-btn {
-            margin-left: auto; margin-right: auto;
-          }
+          .splash-left > div:first-child { font-size: 42px !important; line-height: 0.9 !important; }
+          .splash-left > div:nth-child(2) { display: none !important; }
+          .start-btn { margin-top: 14px !important; margin-left: auto !important; margin-right: auto !important; padding: 11px 22px !important; }
           .splash-center {
             order: 1;
             justify-self: center;
-            transform: scale(0.72);
+            transform: scale(0.55);
             transform-origin: top center;
-            margin-bottom: -40px;
+            margin-bottom: -90px;
           }
           .splash-right {
             order: 3;
             text-align: center !important;
-            padding-top: 16px;
+            padding-top: 6px;
           }
-          .splash-right > div:first-child { font-size: 16px !important; }
-          .splash-right .tags-col { align-items: center !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; }
-          .splash-topbar span:not(:first-child) { display: none; }
+          .splash-right > div:first-child { display: none !important; }
+          .splash-right > div:nth-child(2) { display: none !important; }
+          .tags-col { align-items: center !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; margin-top: 8px !important; gap: 4px !important; }
+          .menu-tag { font-size: 9px !important; padding: 3px 8px !important; }
           .splash-bottombar { display: none !important; }
         }
       `}</style>
