@@ -44,24 +44,26 @@ export default function Home() {
           .splash-hero {
             grid-template-columns: 1fr !important;
             grid-template-rows: auto auto auto !important;
-            padding: 8px 24px 0 !important;
+            padding: 4px 24px 0 !important;
             gap: 0 !important;
             align-items: center !important;
           }
+          .splash-topbar { padding: 10px 24px !important; }
+          .splash-topbar span:not(:first-child) { display: none !important; }
           .splash-left {
             order: 2;
             text-align: center;
             padding-top: 4px;
           }
-          .splash-left > div:first-child { font-size: 42px !important; line-height: 0.9 !important; }
+          .splash-left > div:first-child { font-size: 36px !important; line-height: 0.9 !important; }
           .splash-left > div:nth-child(2) { display: none !important; }
-          .start-btn { margin-top: 14px !important; margin-left: auto !important; margin-right: auto !important; padding: 11px 22px !important; }
+          .start-btn { margin-top: 10px !important; margin-left: auto !important; margin-right: auto !important; padding: 10px 20px !important; font-size: 10px !important; }
           .splash-center {
             order: 1;
             justify-self: center;
-            transform: scale(0.55);
+            transform: scale(0.65);
             transform-origin: top center;
-            margin-bottom: -90px;
+            margin-bottom: -72px;
           }
           .splash-right {
             order: 3;
@@ -83,7 +85,7 @@ export default function Home() {
       }} />
 
       {/* TOP BAR */}
-      <div style={{
+      <div className="splash-topbar" style={{
         padding: '15px 48px', display: 'flex', justifyContent: 'space-between',
         borderBottom: '1px solid rgba(245,240,230,0.12)',
         fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.24em',
