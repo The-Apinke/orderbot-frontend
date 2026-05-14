@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <main style={{
-      height: '100vh', overflow: 'hidden',
+      minHeight: '100vh', overflow: 'hidden',
       background: 'linear-gradient(160deg, #3a1600 0%, #5c2400 40%, #3a1200 100%)',
       display: 'grid', gridTemplateRows: 'auto 1fr auto',
       fontFamily: "'DM Sans', sans-serif", color: '#f5f0e6',
@@ -41,8 +41,37 @@ export default function Home() {
         }
 
         @media (max-width: 860px) {
-          .splash-left, .splash-right { display: none !important; }
-          .splash-center { justify-self: center; }
+          .splash-hero {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: auto auto auto !important;
+            padding: 24px 28px !important;
+            gap: 0 !important;
+            overflow-y: auto !important;
+          }
+          .splash-left {
+            order: 2;
+            text-align: center;
+            padding-top: 20px;
+          }
+          .splash-left .start-btn {
+            margin-left: auto; margin-right: auto;
+          }
+          .splash-center {
+            order: 1;
+            justify-self: center;
+            transform: scale(0.72);
+            transform-origin: top center;
+            margin-bottom: -40px;
+          }
+          .splash-right {
+            order: 3;
+            text-align: center !important;
+            padding-top: 16px;
+          }
+          .splash-right > div:first-child { font-size: 16px !important; }
+          .splash-right .tags-col { align-items: center !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; }
+          .splash-topbar span:not(:first-child) { display: none; }
+          .splash-bottombar { display: none !important; }
         }
       `}</style>
 
@@ -65,7 +94,7 @@ export default function Home() {
       </div>
 
       {/* HERO: 3 columns */}
-      <div style={{
+      <div className="splash-hero" style={{
         display: 'grid', gridTemplateColumns: '1fr auto 1fr',
         alignItems: 'center', gap: 20, padding: '0 52px',
         position: 'relative', zIndex: 1, overflow: 'hidden',
@@ -137,7 +166,7 @@ export default function Home() {
           }}>
             — EVERY REGULAR, EVER
           </div>
-          <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+          <div className="tags-col" style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
             {MENU_TAGS.map((tag, i) => (
               <div key={i} className="menu-tag" style={{
                 border: `1px solid ${i === 0 ? '#d6b24a' : 'rgba(245,240,230,0.18)'}`,
@@ -150,7 +179,7 @@ export default function Home() {
       </div>
 
       {/* BOTTOM BAR */}
-      <div style={{
+      <div className="splash-bottombar" style={{
         padding: '13px 48px', borderTop: '1px solid rgba(245,240,230,0.12)',
         display: 'flex', justifyContent: 'space-between',
         fontFamily: 'monospace', fontSize: 10,
