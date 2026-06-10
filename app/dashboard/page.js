@@ -14,10 +14,21 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [adminKey, setAdminKey] = useState('');
+  const [keyInput, setKeyInput] = useState('');
+  const [authError, setAuthError] = useState(false);
 
-  async function fetchOrders() {
+  useEffect(() => {
+    const saved = sessionStorage.getItem('admin_key');
+    if (saved) setAdminKey(saved);
+  }, []);
+
+  async function fetchOrders(key) {
     try {
-      const res = await fetch(`${API}/orders`);
+      const res = await fetch(`${API}/orders`, {
+        headers: { 'X-Admin-Key': key || adminKey },
+      });
+      if (res.status === 401) { setAdminKey(''); sessionStorage.removeItem('admin_key'); return; }
       const data = await res.json();
       setOrders(data.orders);
       setLastUpdated(new Date());
@@ -26,15 +37,28 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 30000);
+    if (!adminKey) return;
+    fetchOrders(adminKey);
+    const interval = setInterval(() => fetchOrders(adminKey), 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminKey]);
+
+  function handleLogin(e) {
+    e.preventDefault();
+    if (!keyInput.trim()) return;
+    sessionStorage.setItem('admin_key', keyInput.trim());
+    setAdminKey(keyInput.trim());
+    setAuthError(false);
+    setLoading(true);
+    fetchOrders(keyInput.trim()).then(() => {
+      if (!orders.length) setAuthError(false);
+    });
+  }
 
   async function updateStatus(orderId, status) {
     await fetch(`${API}/orders/${orderId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
       body: JSON.stringify({ status }),
     });
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
@@ -48,6 +72,42 @@ export default function DashboardPage() {
   };
 
   const revenue = orders.filter(o => o.status === 'fulfilled').reduce((s, o) => s + Number(o.total_price), 0);
+
+  if (!adminKey) return (
+    <div style={{
+      minHeight: '100vh', background: '#f2f0e9',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      <form onSubmit={handleLogin} style={{
+        background: '#fff', border: '1px solid #ddd8c8', borderTop: '4px solid #623920',
+        padding: '40px 36px', width: '100%', maxWidth: 360, textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>🔥</div>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: '#2a1a08', marginBottom: 4 }}>
+          Uncle Soji's Dashboard
+        </div>
+        <div style={{ fontSize: 12, color: '#a89070', marginBottom: 24 }}>Enter your admin password to continue</div>
+        {authError && <div style={{ fontSize: 12, color: '#c0392b', marginBottom: 12 }}>Incorrect password</div>}
+        <input
+          type="password" placeholder="Admin password" value={keyInput}
+          onChange={e => setKeyInput(e.target.value)} autoFocus
+          style={{
+            width: '100%', padding: '11px 14px', border: '1px solid #ddd8c8',
+            fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#2a1a08',
+            outline: 'none', marginBottom: 12, background: '#f2f0e9',
+          }}
+        />
+        <button type="submit" style={{
+          width: '100%', padding: '12px', background: '#623920', color: '#fff',
+          border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+          fontWeight: 600, letterSpacing: '0.08em', cursor: 'pointer',
+        }}>
+          ENTER →
+        </button>
+      </form>
+    </div>
+  );
 
   return (
     <>
