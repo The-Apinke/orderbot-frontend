@@ -46,7 +46,7 @@ export default function ChatPage() {
   const mediaRecorderRef  = useRef(null);
   const audioChunksRef    = useRef([]);
   const router            = useRouter();
-  const API = process.env.NEXT_PUBLIC_API_URL || 'https://orderbot-backend-production-d13d.up.railway.app';
+  const API = process.env.NEXT_PUBLIC_API_URL || 'https://orderbot-backend.onrender.com';
 
   useEffect(() => { fetchMenu(); fetchWelcome(); }, []);
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API = 'https://orderbot-backend-production-d13d.up.railway.app';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://orderbot-backend.onrender.com';
 
 const STATUS_STYLES = {
   pending:   { bg: '#fef9ec', text: '#92630a', border: '#f0d888' },
